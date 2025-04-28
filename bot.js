@@ -1,5 +1,9 @@
 const { Telegraf, Markup } = require("telegraf");
-require("dotenv").config(); // Load env variables
+require("dotenv").config();
+const express = require("express");
+
+const app = express();
+app.use(express.json());
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -92,6 +96,7 @@ bot.action("centers", async (ctx) => {
 });
 
 // Handle 🔙 Back to Menu
+
 bot.action("back_to_menu", async (ctx) => {
   try {
     await ctx.answerCbQuery();
@@ -223,6 +228,11 @@ const examDetails = {
   // Add more exams similarly...
 };
 
+/// Handle class details
+Object.keys(classDetails).forEach((classKey) => {
+  bot.action(classKey, (ctx) => showClassDetails(ctx, classKey));
+});
+
 // Handle exam details
 Object.keys(examDetails).forEach((examKey) => {
   bot.action(examKey, (ctx) => showExamDetails(ctx, examKey));
@@ -272,13 +282,14 @@ const showExamDetails = async (ctx, examKey) => {
   }
 };
 
-// Handle class details
-Object.keys(classDetails).forEach((classKey) => {
-  bot.action(classKey, (ctx) => showClassDetails(ctx, classKey));
+// Webhook setup
+app.post(`/webhook/${process.env.BOT_TOKEN}`, (req, res) => {
+  bot.handleUpdate(req.body);
+  res.sendStatus(200);
 });
 
-// Start the bot
-bot
-  .launch()
-  .then(() => console.log("Bot is running..."))
-  .catch((error) => console.error("Bot launch error:", error));
+// Start the Express server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
