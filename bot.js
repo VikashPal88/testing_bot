@@ -1,11 +1,15 @@
 const { Telegraf, Markup } = require("telegraf");
-require("dotenv").config();
 const express = require("express");
-
-const app = express();
-app.use(express.json());
+require("dotenv").config(); // Load env variables
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
+
+// Webhook setup
+const webhookPath = `/bot${process.env.BOT_TOKEN}`;
+app.use(bot.webhookCallback(webhookPath));
+
+app.get("/", (req, res) => res.send("Bot is running"));
 
 // /start command
 bot.start((ctx) => {
@@ -96,7 +100,6 @@ bot.action("centers", async (ctx) => {
 });
 
 // Handle 🔙 Back to Menu
-
 bot.action("back_to_menu", async (ctx) => {
   try {
     await ctx.answerCbQuery();
@@ -228,11 +231,6 @@ const examDetails = {
   // Add more exams similarly...
 };
 
-/// Handle class details
-Object.keys(classDetails).forEach((classKey) => {
-  bot.action(classKey, (ctx) => showClassDetails(ctx, classKey));
-});
-
 // Handle exam details
 Object.keys(examDetails).forEach((examKey) => {
   bot.action(examKey, (ctx) => showExamDetails(ctx, examKey));
@@ -282,14 +280,22 @@ const showExamDetails = async (ctx, examKey) => {
   }
 };
 
-// Webhook setup
-app.post(`/webhook/${process.env.BOT_TOKEN}`, (req, res) => {
-  bot.handleUpdate(req.body);
-  res.sendStatus(200);
+// Handle class details
+Object.keys(classDetails).forEach((classKey) => {
+  bot.action(classKey, (ctx) => showClassDetails(ctx, classKey));
 });
 
-// Start the Express server
+// // Start the bot
+// bot
+//   .launch()
+//   .then(() => console.log("Bot is running..."))
+//   .catch((error) => console.error("Bot launch error:", error));
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, async () => {
+  console.log(`Bot running on port ${PORT}`);
+  // Set webhook after server starts
+  const webhookUrl = `https://your-bot-name.up.railway.app${webhookPath}`;
+  await bot.telegram.setWebhook(webhookUrl);
+  console.log(`Webhook set to ${webhookUrl}`);
 });
