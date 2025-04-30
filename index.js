@@ -295,7 +295,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Bot running on port ${PORT}`);
   // Set webhook after server starts
-  const webhookUrl = `https://your-bot-name.up.railway.app${webhookPath}`;
+  const webhookUrl = `https://testingbot-production-9f87.up.railway.app/bot${process.env.BOT_TOKEN}`;
   await bot.telegram.setWebhook(webhookUrl);
   console.log(`Webhook set to ${webhookUrl}`);
 });
